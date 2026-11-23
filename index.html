@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Abarrotes La Esquina</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f6f7f3;--sf:#fff;--tx:#17262b;--mu:#5d6b70;--pr:#0f4c5c;--ac:#e9b44c;--rd:#c8452d;--ln:#d9ddd5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121b1e;--sf:#1b282c;--tx:#eef2ee;--mu:#9bacb0;--pr:#5fb3c7;--ln:#2f4146}}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 'Bricolage Grotesque',system-ui,sans-serif}
+h1,h2,h3{margin:0;line-height:1.15}
+button,input,select{font:inherit;color:inherit}
+.btn{background:var(--pr);color:#fff;border:0;border-radius:8px;padding:.55rem 1rem;cursor:pointer;font-weight:600}
+.btn.ac{background:var(--ac);color:#17262b}.btn.ln{background:none;color:var(--tx);border:1px solid var(--ln)}.btn.rd{background:var(--rd)}.btn.sm{padding:.3rem .65rem;font-size:.85rem}
+.btn:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+input,select{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:.5rem .7rem;width:100%}
+label{display:block;font-size:.85rem;color:var(--mu);margin:.7rem 0 .2rem}
+.login{min-height:100vh;display:grid;place-items:center;padding:1rem}
+.lbox{background:var(--sf);border:1px solid var(--ln);border-radius:14px;padding:2rem;width:min(400px,100%)}
+.lbox h1{font-size:2rem;font-weight:800;color:var(--pr)}
+.hint{font-size:.85rem;color:var(--mu);margin-top:1rem}
+.err{color:var(--rd);font-size:.9rem;margin-top:.6rem;min-height:1.2em}
+header{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;justify-content:space-between;padding:.8rem 1.2rem;background:var(--pr);color:#fff}
+header h2{font-weight:800}
+header .who{display:flex;gap:.6rem;align-items:center;font-size:.9rem}
+nav{display:flex;gap:.3rem;padding:.6rem 1.2rem;border-bottom:1px solid var(--ln);overflow-x:auto}
+nav button{background:none;border:0;padding:.45rem .9rem;border-radius:8px;cursor:pointer;white-space:nowrap;color:var(--mu);font-weight:600}
+nav button.on{background:var(--pr);color:#fff}
+main{max-width:1000px;margin:0 auto;padding:1.2rem}
+.bar{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1rem}.bar input{flex:2 1 200px}.bar select{flex:1 1 140px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.8rem}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:.9rem;display:flex;flex-direction:column;gap:.3rem}
+.card .pr{font-size:1.35rem;font-weight:800;color:var(--pr)}
+.mu{color:var(--mu);font-size:.85rem}
+.low{color:var(--rd);font-weight:600}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:var(--sf);border:1px solid var(--ln)}
+th,td{padding:.55rem .7rem;text-align:left;border-bottom:1px solid var(--ln);font-size:.92rem}
+th{color:var(--mu);font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.8rem;margin-bottom:1.2rem}
+.stat b{display:block;font-size:1.7rem;font-weight:800}
+.row{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:grid;place-items:center;padding:1rem;z-index:20}
+.mbox{background:var(--sf);border-radius:12px;padding:1.4rem;width:min(440px,100%);max-height:90vh;overflow:auto}
+.ticket{font-family:ui-monospace,monospace;font-size:.88rem}
+.toast{position:fixed;bottom:calc(1rem + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:.6rem 1rem;border-radius:8px;z-index:30}
+</style></head><body>
+<div id="app"></div>
+<script>
+const $=s=>document.querySelector(s);
+const money=n=>'$'+Number(n).toFixed(2);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+const seed={
+ users:[{id:1,nombre:'Administrador',usuario:'admin',pass:'admin123',rol:'admin'},{id:2,nombre:'Cliente Demo',usuario:'cliente',pass:'cliente123',rol:'usuario'}],
+ prods:[
+  {id:1,codigo:'7501000',nombre:'Leche entera 1 L',cat:'Lácteos',unidad:'pieza',compra:19,venta:26,stock:40,min:10},
+  {id:2,codigo:'7501001',nombre:'Huevo',cat:'Básicos',unidad:'kg',compra:38,venta:52,stock:25,min:8},
+  {id:3,codigo:'7501002',nombre:'Frijol negro',cat:'Granos',unidad:'kg',compra:28,venta:39,stock:30,min:10},
+  {id:4,codigo:'7501003',nombre:'Arroz',cat:'Granos',unidad:'kg',compra:20,venta:29,stock:6,min:10},
+  {id:5,codigo:'7501004',nombre:'Refresco 600 ml',cat:'Bebidas',unidad:'pieza',compra:12,venta:18,stock:60,min:15},
+  {id:6,codigo:'7501005',nombre:'Pan de caja',cat:'Panadería',unidad:'pieza',compra:32,venta:45,stock:12,min:5},
+  {id:7,codigo:'7501006',nombre:'Aceite 1 L',cat:'Básicos',unidad:'pieza',compra:35,venta:48,stock:18,min:6},
+  {id:8,codigo:'7501007',nombre:'Jabón de barra',cat:'Limpieza',unidad:'pieza',compra:9,venta:14,stock:3,min:8}],
+ ventas:[]};
+let S={users:load('t_users',seed.users),prods:load('t_prods',seed.prods),ventas:load('t_ventas',seed.ventas)};
+let me=load('t_me',null),tab='',cart=[],f={q:'',c:''},err='';
+const persist=()=>{save('t_users',S.users);save('t_prods',S.prods);save('t_ventas',S.ventas);save('t_me',me)};
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),2200)}
+
+function render(){
+ if(!me){return login()}
+ const adm=me.rol==='admin';
+ const tabs=adm?[['resumen','Resumen'],['catalogo','Catálogo'],['productos','Productos'],['ventas','Ventas'],['usuarios','Usuarios']]:[['catalogo','Catálogo'],['carrito','Carrito ('+cart.length+')'],['compras','Mis compras']];
+ if(!tab||!tabs.some(t=>t[0]===tab))tab=tabs[0][0];
+ $('#app').innerHTML=`<header><h2>Abarrotes La Esquina</h2><div class="who"><span>${esc(me.nombre)} (${adm?'administrador':'usuario'})</span><button class="btn ac sm" id="out">Cerrar sesión</button></div></header>
+ <nav>${tabs.map(t=>`<button class="${t[0]===tab?'on':''}" data-t="${t[0]}">${t[1]}</button>`).join('')}</nav><main id="m"></main>`;
+ $('#out').onclick=()=>{me=null;cart=[];tab='';persist();render()};
+ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});
+ ({resumen:vResumen,catalogo:vCatalogo,productos:vProductos,ventas:vVentas,usuarios:vUsuarios,carrito:vCarrito,compras:vCompras})[tab]();
+}
+
+function login(reg){
+ $('#app').innerHTML=`<div class="login"><form class="lbox" id="lf"><h1>Abarrotes La Esquina</h1>
+ <p class="mu">${reg?'Crea tu cuenta de usuario':'Inicia sesión para continuar'}</p>
+ ${reg?'<label for="n">Nombre</label><input id="n" required>':''}
+ <label for="u">Usuario</label><input id="u" required autocomplete="username">
+ <label for="p">Contraseña</label><input id="p" type="password" required autocomplete="current-password">
+ <div class="err" id="e">${esc(err)}</div>
+ <button class="btn" style="width:100%">${reg?'Crear cuenta':'Entrar'}</button>
+ <p class="hint"><a href="#" id="sw">${reg?'Ya tengo cuenta':'Crear una cuenta nueva'}</a></p>
+</form></div>`;
+ $('#sw').onclick=e=>{e.preventDefault();err='';login(!reg)};
+ $('#lf').onsubmit=e=>{e.preventDefault();const u=$('#u').value.trim(),p=$('#p').value;
+  if(reg){if(S.users.some(x=>x.usuario===u)){err='Ese usuario ya existe. Elige otro.';return login(true)}
+   if(p.length<4){err='La contraseña debe tener al menos 4 caracteres.';return login(true)}
+   const nu={id:Date.now(),nombre:$('#n').value.trim(),usuario:u,pass:p,rol:'usuario'};S.users.push(nu);me=nu;err='';persist();render()}
+  else{const x=S.users.find(x=>x.usuario===u&&x.pass===p);if(!x){err='Usuario o contraseña incorrectos.';return login()}me=x;err='';persist();render()}};
+}
+
+function vResumen(){
+ const tot=S.ventas.reduce((a,v)=>a+v.total,0),gan=S.ventas.reduce((a,v)=>a+v.items.reduce((b,i)=>b+(i.precio-i.compra)*i.cant,0),0);
+ const bajo=S.prods.filter(p=>p.stock<=p.min);
+ $('#m').innerHTML=`<div class="stats"><div class="card stat"><span class="mu">Ventas realizadas</span><b>${S.ventas.length}</b></div><div class="card stat"><span class="mu">Ingresos</span><b>${money(tot)}</b></div><div class="card stat"><span class="mu">Ganancia estimada</span><b>${money(gan)}</b></div><div class="card stat"><span class="mu">Productos con stock bajo</span><b class="${bajo.length?'low':''}">${bajo.length}</b></div></div>
+ <h3 style="margin-bottom:.6rem">Reabastecer pronto</h3>${bajo.length?`<div class="tw"><table><tr><th>Producto</th><th>Stock</th><th>Mínimo</th></tr>${bajo.map(p=>`<tr><td>${esc(p.nombre)}</td><td class="low">${p.stock} ${p.unidad}</td><td>${p.min}</td></tr>`).join('')}</table></div>`:'<p class="mu">Todo el inventario está arriba del mínimo.</p>'}`;
+}
+
+function vCatalogo(){
+ const cats=[...new Set(S.prods.map(p=>p.cat))].sort();
+ $('#m').innerHTML=`<div class="bar"><input id="q" placeholder="Buscar producto o código" value="${esc(f.q)}"><select id="c"><option value="">Todas las categorías</option>${cats.map(c=>`<option ${c===f.c?'selected':''}>${esc(c)}</option>`).join('')}</select></div><div class="grid" id="g"></div>`;
+ const draw=()=>{const l=S.prods.filter(p=>(!f.c||p.cat===f.c)&&(p.nombre+p.codigo).toLowerCase().includes(f.q.toLowerCase()));
+  $('#g').innerHTML=l.length?l.map(p=>`<div class="card"><span class="mu">${esc(p.cat)}</span><h3>${esc(p.nombre)}</h3><div class="pr">${money(p.venta)} <span class="mu">/ ${p.unidad}</span></div><span class="${p.stock<=p.min?'low':'mu'}">${p.stock>0?(p.stock<=p.min?'Quedan pocos: ':'Disponible: ')+p.stock+' '+p.unidad:'Agotado'}</span>${me.rol==='usuario'?`<div class="row"><input type="number" min="${p.unidad==='kg'?0.1:1}" step="${p.unidad==='kg'?0.1:1}" value="1" id="q${p.id}" style="width:80px"><button class="btn sm" data-a="${p.id}" ${p.stock<=0?'disabled':''}>Agregar</button></div>`:''}</div>`).join(''):'<p class="mu">No hay productos que coincidan con la búsqueda.</p>';
+  document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const p=S.prods.find(x=>x.id==b.dataset.a),n=parseFloat($('#q'+p.id).value);
+   if(!(n>0))return toast('Escribe una cantidad válida');
+   const ex=cart.find(i=>i.id===p.id),tot=(ex?ex.cant:0)+n;
+   if(tot>p.stock)return toast('Solo hay '+p.stock+' '+p.unidad+' en existencia');
+   if(ex)ex.cant=tot;else cart.push({id:p.id,cant:n});toast('Agregado al carrito');render()})};
+ $('#q').oninput=e=>{f.q=e.target.value;draw()};$('#c').onchange=e=>{f.c=e.target.value;draw()};draw();
+}
+
+function vCarrito(){
+ const rows=cart.map(i=>({...i,p:S.prods.find(p=>p.id===i.id)}));const total=rows.reduce((a,r)=>a+r.p.venta*r.cant,0);
+ $('#m').innerHTML=rows.length?`<div class="tw"><table><tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th><th></th></tr>${rows.map((r,k)=>`<tr><td>${esc(r.p.nombre)}</td><td>${r.cant} ${r.p.unidad}</td><td>${money(r.p.venta)}</td><td>${money(r.p.venta*r.cant)}</td><td><button class="btn ln sm" data-r="${k}">Quitar</button></td></tr>`).join('')}</table></div>
+ <h2 style="margin:1rem 0">Total: ${money(total)}</h2><div class="row"><select id="mp" style="width:200px"><option>Efectivo</option><option>Tarjeta</option></select><button class="btn" id="pay">Finalizar compra</button></div>`:'<p class="mu">Tu carrito está vacío. Ve al catálogo para agregar productos.</p>';
+ document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{cart.splice(b.dataset.r,1);render()});
+ if(rows.length)$('#pay').onclick=()=>{
+  for(const r of rows)if(r.cant>r.p.stock)return toast('Ya no hay suficiente '+r.p.nombre);
+  const v={id:Date.now(),folio:'V-'+String(S.ventas.length+1).padStart(5,'0'),fecha:new Date().toISOString(),usuario:me.usuario,nombre:me.nombre,metodo:$('#mp').value,total,
+   items:rows.map(r=>({nombre:r.p.nombre,unidad:r.p.unidad,cant:r.cant,precio:r.p.venta,compra:r.p.compra}))};
+  rows.forEach(r=>r.p.stock=Math.round((r.p.stock-r.cant)*100)/100);
+  S.ventas.push(v);cart=[];persist();tab='compras';render();ticket(v)};
+}
+
+function ticket(v){
+ const m=document.createElement('div');m.className='modal';
+ m.innerHTML=`<div class="mbox ticket"><h3>Abarrotes La Esquina</h3><p>${v.folio} · ${new Date(v.fecha).toLocaleString('es-MX')}<br>Cliente: ${esc(v.nombre)}</p><hr>${v.items.map(i=>`<div>${esc(i.nombre)}<br>&nbsp;&nbsp;${i.cant} ${i.unidad} x ${money(i.precio)} = ${money(i.cant*i.precio)}</div>`).join('')}<hr><b>TOTAL ${money(v.total)}</b><br>Pago: ${v.metodo}<p>Gracias por tu compra.</p><button class="btn" style="width:100%">Cerrar</button></div>`;
+ m.onclick=e=>{if(e.target===m||e.target.tagName==='BUTTON')m.remove()};document.body.append(m);
+}
+
+function vCompras(){
+ const l=S.ventas.filter(v=>v.usuario===me.usuario).reverse();
+ $('#m').innerHTML=l.length?`<div class="tw"><table><tr><th>Folio</th><th>Fecha</th><th>Pago</th><th>Total</th><th></th></tr>${l.map(v=>`<tr><td>${v.folio}</td><td>${new Date(v.fecha).toLocaleDateString('es-MX')}</td><td>${v.metodo}</td><td>${money(v.total)}</td><td><button class="btn ln sm" data-v="${v.id}">Ver ticket</button></td></tr>`).join('')}</table></div>`:'<p class="mu">Todavía no has hecho compras.</p>';
+ document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>ticket(S.ventas.find(v=>v.id==b.dataset.v)));
+}
+
+function vProductos(){
+ $('#m').innerHTML=`<div class="row" style="margin-bottom:1rem"><button class="btn" id="new">Nuevo producto</button></div><div class="tw"><table><tr><th>Código</th><th>Producto</th><th>Categoría</th><th>Compra</th><th>Venta</th><th>Stock</th><th></th></tr>${S.prods.map(p=>`<tr><td>${esc(p.codigo)}</td><td>${esc(p.nombre)}</td><td>${esc(p.cat)}</td><td>${money(p.compra)}</td><td>${money(p.venta)}</td><td class="${p.stock<=p.min?'low':''}">${p.stock} ${p.unidad}</td><td class="row"><button class="btn ln sm" data-e="${p.id}">Editar</button><button class="btn rd sm" data-d="${p.id}">Eliminar</button></td></tr>`).join('')}</table></div>`;
+ $('#new').onclick=()=>formProd();
+ document.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>formProd(S.prods.find(p=>p.id==b.dataset.e)));
+ document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const p=S.prods.find(p=>p.id==b.dataset.d);if(confirm('¿Eliminar "'+p.nombre+'"?')){S.prods=S.prods.filter(x=>x!==p);persist();render()}});
+}
+function formProd(p){
+ const n=p||{codigo:'',nombre:'',cat:'',unidad:'pieza',compra:0,venta:0,stock:0,min:5};
+ const m=document.createElement('div');m.className='modal';
+ m.innerHTML=`<form class="mbox"><h3>${p?'Editar producto':'Nuevo producto'}</h3>
+ <label>Código de barras</label><input name="codigo" value="${esc(n.codigo)}" required><label>Nombre</label><input name="nombre" value="${esc(n.nombre)}" required><label>Categoría</label><input name="cat" value="${esc(n.cat)}" required>
+ <label>Unidad de medida</label><select name="unidad"><option ${n.unidad==='pieza'?'selected':''}>pieza</option><option ${n.unidad==='kg'?'selected':''}>kg</option></select>
+ <label>Precio de compra</label><input name="compra" type="number" step="0.01" min="0" value="${n.compra}" required><label>Precio de venta</label><input name="venta" type="number" step="0.01" min="0" value="${n.venta}" required>
+ <label>Stock actual</label><input name="stock" type="number" step="0.1" min="0" value="${n.stock}" required><label>Stock mínimo</label><input name="min" type="number" step="0.1" min="0" value="${n.min}" required>
+ <div class="row" style="margin-top:1rem"><button class="btn">Guardar cambios</button><button type="button" class="btn ln" id="x">Cancelar</button></div></form>`;
+ document.body.append(m);m.querySelector('#x').onclick=()=>m.remove();
+ m.querySelector('form').onsubmit=e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));
+  ['compra','venta','stock','min'].forEach(k=>d[k]=parseFloat(d[k]));
+  if(p)Object.assign(p,d);else S.prods.push({id:Date.now(),...d});persist();m.remove();render()};
+}
+
+function vVentas(){
+ const l=[...S.ventas].reverse();
+ $('#m').innerHTML=l.length?`<div class="tw"><table><tr><th>Folio</th><th>Fecha</th><th>Cliente</th><th>Pago</th><th>Total</th><th></th></tr>${l.map(v=>`<tr><td>${v.folio}</td><td>${new Date(v.fecha).toLocaleString('es-MX')}</td><td>${esc(v.nombre)}</td><td>${v.metodo}</td><td>${money(v.total)}</td><td><button class="btn ln sm" data-v="${v.id}">Ver ticket</button></td></tr>`).join('')}</table></div>`:'<p class="mu">Aún no se registran ventas.</p>';
+ document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>ticket(S.ventas.find(v=>v.id==b.dataset.v)));
+}
+
+function vUsuarios(){
+ $('#m').innerHTML=`<div class="tw"><table><tr><th>Nombre</th><th>Usuario</th><th>Rol</th><th></th></tr>${S.users.map(u=>`<tr><td>${esc(u.nombre)}</td><td>${esc(u.usuario)}</td><td>${u.rol}</td><td class="row">${u.id===me.id?'<span class="mu">Tu cuenta</span>':`<button class="btn ln sm" data-r="${u.id}">Hacer ${u.rol==='admin'?'usuario':'admin'}</button><button class="btn rd sm" data-d="${u.id}">Eliminar</button>`}</td></tr>`).join('')}</table></div>`;
+ document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{const u=S.users.find(u=>u.id==b.dataset.r);u.rol=u.rol==='admin'?'usuario':'admin';persist();render()});
+ document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const u=S.users.find(u=>u.id==b.dataset.d);if(confirm('¿Eliminar a '+u.nombre+'?')){S.users=S.users.filter(x=>x!==u);persist();render()}});
+}
+render();
+</script></body></html>
